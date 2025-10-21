@@ -1,4 +1,5 @@
 import './App.css'
+import ChatbotWidget from './ChatbotWidget'
 
 function App() {
   return (
@@ -13,6 +14,9 @@ function App() {
           Microphone
         </button>
       </div>
+      
+      {/* Chatbot Widget */}
+      <ChatbotWidget />
     </div>
   )
 }
