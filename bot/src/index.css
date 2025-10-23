@@ -1,11 +1,22 @@
-/* Global styles */
+/* Global styles - Minimal for iframe */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
+  padding: 0;
+  background: transparent;
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 }
 
 #root {
+  margin: 0;
+  padding: 0;
+  background: transparent;
   min-height: 100vh;
 }

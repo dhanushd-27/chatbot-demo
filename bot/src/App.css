@@ -1,1 +1,6 @@
-/* App-specific styles */
+/* Bot App - Minimal styling for iframe embedding */
+.App {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}

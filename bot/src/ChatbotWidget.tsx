@@ -9,7 +9,26 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleChat = () => {
-    setIsOpen(!isOpen);
+    const newState = !isOpen;
+    console.log('💬 Chatbot button clicked! State:', newState ? 'OPENING' : 'CLOSING');
+    setIsOpen(newState);
+    
+    // Send message to parent window (client app)
+    console.log('🔍 Checking window.parent:', window.parent !== window);
+    if (window.parent !== window) {
+      console.log('📤 Sending message to parent window:', { type: 'CHATBOT_TOGGLE', isOpen: newState });
+      try {
+        window.parent.postMessage({
+          type: 'CHATBOT_TOGGLE',
+          isOpen: newState
+        }, '*');
+        console.log('✅ Message sent successfully');
+      } catch (error) {
+        console.error('❌ Error sending message:', error);
+      }
+    } else {
+      console.log('⚠️ Not in iframe, skipping parent message');
+    }
   };
 
   return (
