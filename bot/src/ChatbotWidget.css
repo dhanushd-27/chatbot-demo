@@ -40,8 +40,8 @@
   position: absolute;
   bottom: 80px;
   right: 0;
-  width: 350px;
-  height: 500px;
+  width: 450px;
+  height: 650px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -101,6 +101,7 @@
   padding: 12px;
   border-radius: 8px;
   max-width: 80%;
+  position: relative;
 }
 
 .bot-message {
@@ -115,6 +116,13 @@
   color: #fff;
   align-self: flex-end;
   margin-left: auto;
+}
+
+.message-time {
+  display: block;
+  font-size: 10px;
+  opacity: 0.7;
+  margin-top: 4px;
 }
 
 /* Input Area */
@@ -156,6 +164,10 @@
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
 }
 
 .chatbot-send-btn:hover {
@@ -163,11 +175,95 @@
   color: #000;
 }
 
+.chatbot-send-btn:disabled {
+  background: #ccc;
+  color: #666;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+.mic-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+.send-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.stop-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* Audio Visualizer */
+.audio-visualizer {
+  padding: 12px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 8px;
+}
+
+.visualizer-bars {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 2px;
+  height: 40px;
+  margin-bottom: 8px;
+}
+
+.visualizer-bar {
+  width: 4px;
+  min-height: 2px;
+  background: #007bff;
+  border-radius: 2px;
+  transition: all 0.1s ease;
+}
+
+.recording-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  background: #dc3545;
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+.chatbot-send-btn.recording {
+  background: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+.chatbot-send-btn.recording:hover {
+  background: #c82333 !important;
+  color: #fff !important;
+}
+
 /* Responsive Design */
 @media (max-width: 480px) {
   .chatbot-interface {
-    width: 300px;
-    height: 400px;
+    width: 350px;
+    height: 500px;
     bottom: 70px;
   }
   

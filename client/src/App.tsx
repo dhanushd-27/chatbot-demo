@@ -18,6 +18,11 @@ function App() {
         console.log('🤖 Chatbot state changed:', event.data.isOpen ? 'OPEN' : 'CLOSED')
         setChatbotOpen(event.data.isOpen)
       }
+      
+      if (event.data.type === 'REQUEST_MICROPHONE') {
+        console.log('🎤 Bot requesting microphone access')
+        handleMicrophoneRequest()
+      }
     }
 
     console.log('👂 Setting up message listener')
@@ -27,6 +32,38 @@ function App() {
       window.removeEventListener('message', handleMessage)
     }
   }, [])
+
+  const handleMicrophoneRequest = async () => {
+    try {
+      console.log('🎤 Requesting microphone permission...')
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      
+      // Store the stream globally so iframe can access it
+      ;(window as any).parentMicrophoneStream = stream
+      
+      // Grant access to the iframe
+      const iframe = document.querySelector('iframe')
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: 'MICROPHONE_GRANTED',
+          hasPermission: true
+        }, '*')
+        console.log('✅ Microphone access granted to iframe')
+      }
+    } catch (error) {
+      console.error('❌ Microphone access denied:', error)
+      
+      // Deny access to the iframe
+      const iframe = document.querySelector('iframe')
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: 'MICROPHONE_DENIED',
+          error: error.message
+        }, '*')
+        console.log('❌ Microphone access denied to iframe')
+      }
+    }
+  }
 
   return (
     <div className="app">
@@ -58,6 +95,7 @@ function App() {
       {/* Chatbot iframe - always rendered and interactive */}
       <div id="chatbot-container">
         <iframe
+          allow='autoplay;microphone'
           src="http://localhost:55038"
           width="100%"
           height="100%"
