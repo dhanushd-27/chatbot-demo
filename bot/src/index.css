@@ -1,4 +1,4 @@
-/* Global styles - Minimal for iframe */
+/* Global styles - Only chatbot widget */
 * {
   margin: 0;
   padding: 0;
@@ -12,11 +12,24 @@ body {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  overflow: hidden; /* Prevent any scrolling */
 }
 
 #root {
   margin: 0;
   padding: 0;
   background: transparent;
-  min-height: 100vh;
+  height: auto;
+  width: auto;
+  position: relative;
+  overflow: hidden; /* Prevent any overflow */
+}
+
+/* Show only the chatbot widget */
+.App {
+  display: block !important;
+}
+
+.chatbot-widget {
+  display: block !important;
 }

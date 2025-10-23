@@ -1,6 +1,11 @@
-/* Bot App - Minimal styling for iframe embedding */
+/* Bot App - Only chatbot widget visible */
 .App {
   margin: 0;
   padding: 0;
   background: transparent;
+  height: auto;
+  width: auto;
+  position: relative;
+  overflow: hidden;
+  display: block !important;
 }
