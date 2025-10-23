@@ -1,17 +1,7 @@
+/* App-specific styles */
 .app {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
-}
-
-.mic-icon {
-  width: 24px;
-  height: 24px;
-  fill: currentColor;
-  transition: transform 0.2s ease;
-}
-
-.mic-icon:hover {
-  transform: scale(1.1);
 }

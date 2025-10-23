@@ -3,8 +3,8 @@ import ChatbotWidget from './ChatbotWidget'
 
 function App() {
   return (
-    <div className="app">
-      <h1>Chatbot Demo</h1>
+    <div className="App">
+      <h1>Bot App</h1>
       <p>Welcome to your clean Vite React + TypeScript app!</p>
       <p>Click the chat icon in the bottom-right corner to test the chatbot widget!</p>
       
