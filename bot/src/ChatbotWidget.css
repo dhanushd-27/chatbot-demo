@@ -5,6 +5,7 @@
   right: 20px;
   z-index: 9999;
   font-family: system-ui, Arial, sans-serif;
+  display: block;
 }
 
 
@@ -23,6 +24,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10000;
+  position: relative;
 }
 
 .chatbot-toggle-btn:hover {
@@ -204,4 +207,229 @@
   font-size: 11px;
   color: #666;
   font-style: italic;
+}
+
+/* Markdown Styling */
+.bot-message .markdown-body {
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: inherit;
+}
+
+.bot-message .markdown-body h1,
+.bot-message .markdown-body h2,
+.bot-message .markdown-body h3,
+.bot-message .markdown-body h4,
+.bot-message .markdown-body h5,
+.bot-message .markdown-body h6 {
+  margin: 8px 0 4px 0;
+  font-weight: bold;
+  color: #333;
+}
+
+.bot-message .markdown-body h1 { font-size: 18px; }
+.bot-message .markdown-body h2 { font-size: 16px; }
+.bot-message .markdown-body h3 { font-size: 15px; }
+.bot-message .markdown-body h4 { font-size: 14px; }
+.bot-message .markdown-body h5 { font-size: 13px; }
+.bot-message .markdown-body h6 { font-size: 12px; }
+
+.bot-message .markdown-body p {
+  margin: 4px 0;
+}
+
+.bot-message .markdown-body ul,
+.bot-message .markdown-body ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.bot-message .markdown-body li {
+  margin: 2px 0;
+}
+
+.bot-message .markdown-body code {
+  background: #f1f3f4;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.bot-message .markdown-body pre {
+  background: #f1f3f4;
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 4px 0;
+}
+
+.bot-message .markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.bot-message .markdown-body blockquote {
+  border-left: 3px solid #ddd;
+  margin: 4px 0;
+  padding-left: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+.bot-message .markdown-body a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.bot-message .markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.bot-message .markdown-body strong {
+  font-weight: bold;
+}
+
+.bot-message .markdown-body em {
+  font-style: italic;
+}
+
+.bot-message .markdown-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 4px 0;
+}
+
+.bot-message .markdown-body th,
+.bot-message .markdown-body td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: left;
+}
+
+.bot-message .markdown-body th {
+  background: #f8f9fa;
+  font-weight: bold;
+}
+
+/* Voice Recording Styles */
+.microphone-btn {
+  background: #007bff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-right: 8px;
+  transition: all 0.3s ease;
+}
+
+.microphone-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: scale(1.05);
+}
+
+.microphone-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.microphone-icon {
+  width: 20px;
+  height: 20px;
+  filter: brightness(0) invert(1);
+}
+
+.voice-recording-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px solid #007bff;
+}
+
+.voice-visualizer {
+  flex: 1;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 123, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.voice-processing {
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.voice-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.voice-close-btn,
+.voice-confirm-btn {
+  background: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.voice-close-btn {
+  background: #dc3545;
+}
+
+.voice-close-btn:hover {
+  background: #c82333;
+  transform: scale(1.1);
+}
+
+.voice-confirm-btn {
+  background: #28a745;
+}
+
+.voice-confirm-btn:hover {
+  background: #218838;
+  transform: scale(1.1);
+}
+
+.control-icon {
+  width: 16px;
+  height: 16px;
+  filter: brightness(0) invert(1);
+}
+
+.voice-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.loading-icon {
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
