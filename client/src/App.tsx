@@ -96,7 +96,7 @@ function App() {
       <div id="chatbot-container">
         <iframe
           allow='autoplay;microphone'
-          src="http://localhost:55038"
+          src="http://localhost:5173"
           width="100%"
           height="100%"
           frameBorder="0"

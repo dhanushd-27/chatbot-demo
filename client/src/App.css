@@ -59,6 +59,14 @@
   height: 750px;
   border: none;
   z-index: 1000;
+  background: transparent;
+}
+
+#chatbot-container iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 .interactive-button {
