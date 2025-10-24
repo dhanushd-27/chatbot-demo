@@ -1,18 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ChatbotWidget.css';
-
-interface ChatbotWidgetProps {
-  // Props for customization can be added later
-}
+import { 
+  sendQuery, 
+  checkHealth, 
+  getOrCreateSessionId, 
+  setCurrentSessionId,
+  type QueryResponse 
+} from './services';
 
 interface Message {
   id: number;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  links?: Array<{
+    number: string;
+    title: string;
+    url: string;
+  }>;
+  sources?: string[];
+  detectedLanguage?: string;
+  confidence?: number;
 }
 
-const ChatbotWidget: React.FC<ChatbotWidgetProps> = () => {
+const ChatbotWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -23,53 +34,91 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = () => {
     }
   ]);
   const [inputValue, setInputValue] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioData, setAudioData] = useState<number[]>([]);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string>('');
+  const [apiConnected, setApiConnected] = useState<boolean | null>(null);
+
+  // Initialize session and check API health
+  useEffect(() => {
+    console.log('🤖 ChatbotWidget mounted!');
+    const initializeChatbot = async () => {
+      try {
+        // Get or create session ID
+        const currentSessionId = getOrCreateSessionId();
+        setSessionId(currentSessionId);
+        console.log('🆔 Session ID:', currentSessionId);
+
+        // Check API health
+        const healthResponse = await checkHealth();
+        if (healthResponse.success) {
+          setApiConnected(true);
+          console.log('✅ API connected');
+        } else {
+          setApiConnected(false);
+          console.warn('⚠️ API connection failed');
+        }
+      } catch (error) {
+        console.error('❌ Initialization failed:', error);
+        setApiConnected(false);
+      }
+    };
+
+    initializeChatbot();
+  }, []);
 
   const toggleChat = () => {
-    const newState = !isOpen;
-    console.log('💬 Chatbot button clicked! State:', newState ? 'OPENING' : 'CLOSING');
-    setIsOpen(newState);
-    
-    // Send message to parent window (client app)
-    console.log('🔍 Checking window.parent:', window.parent !== window);
-    if (window.parent !== window) {
-      console.log('📤 Sending message to parent window:', { type: 'CHATBOT_TOGGLE', isOpen: newState });
-      try {
-        window.parent.postMessage({
-          type: 'CHATBOT_TOGGLE',
-          isOpen: newState
-        }, '*');
-        console.log('✅ Message sent successfully');
-      } catch (error) {
-        console.error('❌ Error sending message:', error);
+    console.log('💬 Toggle clicked! Current state:', isOpen);
+    setIsOpen(!isOpen);
+  };
+
+  const sendMessageToAPI = async (userMessage: string): Promise<Message> => {
+    try {
+      console.log('📤 Sending to API:', { sessionId, message: userMessage });
+      
+      const response = await sendQuery(userMessage, sessionId);
+      
+      if (response.success && response.data) {
+        const apiResponse: QueryResponse = response.data;
+        console.log('✅ API response:', apiResponse);
+        
+        // Update session ID if changed
+        if (apiResponse.sessionId !== sessionId) {
+          setSessionId(apiResponse.sessionId);
+          setCurrentSessionId(apiResponse.sessionId);
+        }
+        
+        return {
+          id: Date.now(),
+          text: apiResponse.answer,
+          isUser: false,
+          timestamp: new Date(),
+          links: apiResponse.links,
+          sources: apiResponse.turn.sources,
+          detectedLanguage: apiResponse.turn.detectedLanguage,
+          confidence: apiResponse.turn.confidence,
+        };
+      } else {
+        console.error('❌ API failed:', response.error);
+        return {
+          id: Date.now(),
+          text: `Sorry, I'm having trouble connecting. ${response.error || 'Please try again.'}`,
+          isUser: false,
+          timestamp: new Date(),
+        };
       }
-    } else {
-      console.log('⚠️ Not in iframe, skipping parent message');
+    } catch (error) {
+      console.error('❌ API error:', error);
+      return {
+        id: Date.now(),
+        text: "Sorry, something went wrong. Please try again.",
+        isUser: false,
+        timestamp: new Date(),
+      };
     }
   };
 
-  const getMockResponse = (userMessage: string): string => {
-    const lowerMessage = userMessage.toLowerCase().trim();
-    
-    if (lowerMessage === 'hi' || lowerMessage === 'hello') {
-      return "Hi there! 👋 Nice to meet you! How can I assist you today?";
-    } else if (lowerMessage.includes('help')) {
-      return "I'm here to help! 😊 What would you like to know?";
-    } else if (lowerMessage.includes('thank')) {
-      return "You're very welcome! 😊 Is there anything else I can help you with?";
-    } else if (lowerMessage.includes('bye') || lowerMessage.includes('goodbye')) {
-      return "Goodbye! 👋 Have a great day! Feel free to come back anytime!";
-    } else {
-      return "Thanks for your message! 😊 I'm a simple chatbot, but I'm here to help. How can I assist you today?";
-    }
-  };
-
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now(),
@@ -79,18 +128,25 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = inputValue;
     setInputValue('');
+    setIsLoading(true);
 
-    // Simulate bot response after a short delay
-    setTimeout(() => {
-      const botResponse: Message = {
-        id: Date.now() + 1,
-        text: getMockResponse(inputValue),
+    try {
+      const botResponse = await sendMessageToAPI(currentMessage);
+      setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('❌ Send message error:', error);
+      const errorMessage: Message = {
+        id: Date.now(),
+        text: "Sorry, something went wrong. Please try again.",
         isUser: false,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, botResponse]);
-    }, 1000);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -99,130 +155,28 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = () => {
     }
   };
 
-  const startRecording = async () => {
-    try {
-      // Request microphone access through parent window
-      if (window.parent !== window) {
-        console.log('📤 Requesting microphone access from parent window');
-        window.parent.postMessage({
-          type: 'REQUEST_MICROPHONE',
-          action: 'start'
-        }, '*');
-        
-        // Listen for response from parent
-        const handleMicResponse = (event: MessageEvent) => {
-          if (event.data.type === 'MICROPHONE_GRANTED') {
-            console.log('✅ Microphone access granted by parent');
-            setupRecording();
-          } else if (event.data.type === 'MICROPHONE_DENIED') {
-            console.log('❌ Microphone access denied by parent');
-            alert('Microphone access is required for voice input. Please allow microphone access in your browser settings.');
-          }
-        };
-        
-        window.addEventListener('message', handleMicResponse);
-        
-        // Clean up listener after 5 seconds
-        setTimeout(() => {
-          window.removeEventListener('message', handleMicResponse);
-        }, 5000);
-        
-      } else {
-        // Direct access if not in iframe
-        await setupRecording();
-      }
-    } catch (error) {
-      console.error('❌ Error accessing microphone:', error);
-    }
-  };
-
-  const setupRecording = async () => {
-    try {
-      let stream: MediaStream;
-      
-      // Try to get stream from parent window first
-      if (window.parent !== window && (window.parent as any).parentMicrophoneStream) {
-        console.log('🎤 Using microphone stream from parent window');
-        stream = (window.parent as any).parentMicrophoneStream;
-      } else {
-        console.log('🎤 Requesting microphone access directly');
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      }
-      
-      const recorder = new MediaRecorder(stream);
-      const audioCtx = new AudioContext();
-      const analyserNode = audioCtx.createAnalyser();
-      const source = audioCtx.createMediaStreamSource(stream);
-      
-      analyserNode.fftSize = 256;
-      source.connect(analyserNode);
-      
-      setMediaRecorder(recorder);
-      setAudioContext(audioCtx);
-      setAnalyser(analyserNode);
-      setIsRecording(true);
-      
-      // Start visualization
-      visualizeAudio();
-      
-      recorder.start();
-      console.log('🎤 Recording started');
-    } catch (error) {
-      console.error('❌ Error setting up recording:', error);
-      alert('Failed to access microphone. Please check your browser permissions.');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
-      setIsRecording(false);
-      
-      if (audioContext) {
-        audioContext.close();
-      }
-      
-      // Simulate speech-to-text (in real app, you'd use a speech API)
-      setTimeout(() => {
-        const mockTranscription = "Hello, this is a test message from voice input!";
-        setInputValue(mockTranscription);
-        console.log('🎤 Recording stopped, transcription:', mockTranscription);
-      }, 1000);
-    }
-  };
-
-  const visualizeAudio = () => {
-    if (!analyser) return;
-    
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-    
-    const draw = () => {
-      if (!isRecording) return;
-      
-      analyser.getByteFrequencyData(dataArray);
-      setAudioData(Array.from(dataArray));
-      
-      requestAnimationFrame(draw);
-    };
-    
-    draw();
-  };
-
   return (
     <div className="chatbot-widget">
       {/* Chat Interface */}
       {isOpen && (
         <div className="chatbot-interface">
           <div className="chatbot-header">
-            <h3>Chat Support</h3>
+            <div className="chatbot-title">
+              <h3>Chat Support</h3>
+              <div className="api-status">
+                {apiConnected === null && <span className="status-checking">🔄 Checking...</span>}
+                {apiConnected === true && <span className="status-connected">🟢 Connected</span>}
+                {apiConnected === false && <span className="status-disconnected">🔴 Offline</span>}
+              </div>
+            </div>
             <button 
               className="chatbot-close-btn"
               onClick={toggleChat}
-              aria-label="Close chat"
             >
               ×
             </button>
           </div>
+          
           <div className="chatbot-messages">
             {messages.map((message) => (
               <div 
@@ -230,79 +184,71 @@ const ChatbotWidget: React.FC<ChatbotWidgetProps> = () => {
                 className={`chatbot-message ${message.isUser ? 'user-message' : 'bot-message'}`}
               >
                 <p>{message.text}</p>
+                
+                {/* Show links if available */}
+                {message.links && message.links.length > 0 && (
+                  <div className="message-links">
+                    <strong>Sources:</strong>
+                    {message.links.map((link, index) => (
+                      <a 
+                        key={index}
+                        href={link.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="message-link"
+                      >
+                        [{link.number}] {link.title}
+                      </a>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Show language detection info */}
+                {message.detectedLanguage && (
+                  <div className="message-meta">
+                    <small>
+                      Language: {message.detectedLanguage} 
+                      {message.confidence && ` (${Math.round(message.confidence * 100)}% confidence)`}
+                    </small>
+                  </div>
+                )}
+                
                 <small className="message-time">
-                  {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {message.timestamp.toLocaleTimeString()}
                 </small>
               </div>
             ))}
-          </div>
-          <div className="chatbot-input">
-            {/* Audio Visualizer */}
-            {isRecording && (
-              <div className="audio-visualizer">
-                <div className="visualizer-bars">
-                  {audioData.slice(0, 20).map((value, index) => (
-                    <div
-                      key={index}
-                      className="visualizer-bar"
-                      style={{
-                        height: `${(value / 255) * 100}%`,
-                        backgroundColor: value > 100 ? '#ff4444' : '#007bff'
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="recording-indicator">
-                  <div className="recording-dot"></div>
-                  <span>Recording...</span>
-                </div>
+            
+            {isLoading && (
+              <div className="chatbot-message bot-message">
+                <p>Thinking...</p>
               </div>
             )}
-            
+          </div>
+          
+          <div className="chatbot-input">
             <input 
               type="text" 
-              placeholder={isRecording ? "Recording..." : "Type your message..."}
-              className="chatbot-input-field"
+              placeholder="Type your message..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              disabled={isRecording}
+              disabled={isLoading}
             />
             <button 
-              className={`chatbot-send-btn ${isRecording ? 'recording' : ''}`}
-              onClick={isRecording ? stopRecording : (inputValue.trim() ? handleSendMessage : startRecording)}
-              title={
-                isRecording 
-                  ? "Stop recording" 
-                  : inputValue.trim() 
-                    ? "Send message" 
-                    : "Start voice input"
-              }
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim() || isLoading}
             >
-              {isRecording ? (
-                <svg className="stop-icon" viewBox="0 0 24 24">
-                  <path d="M6 6h12v12H6z"/>
-                </svg>
-              ) : inputValue.trim() ? (
-                <svg className="send-icon" viewBox="0 0 24 24">
-                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                </svg>
-              ) : (
-                <svg className="mic-icon" viewBox="0 0 24 24">
-                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                  <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-                </svg>
-              )}
+              Send
             </button>
           </div>
         </div>
       )}
 
-      {/* Floating Chat Button */}
+      {/* Toggle Button */}
       <button 
-        className={`chatbot-toggle-btn ${isOpen ? 'open' : ''}`}
+        className="chatbot-toggle-btn"
         onClick={toggleChat}
-        aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >
         {isOpen ? '×' : '💬'}
       </button>

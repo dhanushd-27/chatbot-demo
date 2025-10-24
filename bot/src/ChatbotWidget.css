@@ -1,13 +1,14 @@
-/* Chatbot Widget - Minimal Black/White Design */
+/* Chatbot Widget - Clean and Simple */
 .chatbot-widget {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 1000;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  z-index: 9999;
+  font-family: system-ui, Arial, sans-serif;
 }
 
-/* Floating Toggle Button */
+
+/* Toggle Button */
 .chatbot-toggle-btn {
   width: 60px;
   height: 60px;
@@ -17,7 +18,7 @@
   color: #000;
   font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -30,18 +31,13 @@
   transform: scale(1.05);
 }
 
-.chatbot-toggle-btn.open {
-  background: #000;
-  color: #fff;
-}
-
 /* Chat Interface */
 .chatbot-interface {
   position: absolute;
   bottom: 80px;
   right: 0;
-  width: 450px;
-  height: 650px;
+  width: 400px;
+  height: 600px;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -51,7 +47,7 @@
   border: 2px solid #000;
 }
 
-/* Chat Header */
+/* Header */
 .chatbot-header {
   background: #000;
   color: #fff;
@@ -59,36 +55,53 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid #000;
+}
+
+.chatbot-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .chatbot-header h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+}
+
+.api-status {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-checking {
+  color: #ffa500;
+}
+
+.status-connected {
+  color: #00ff00;
+}
+
+.status-disconnected {
+  color: #ff4444;
 }
 
 .chatbot-close-btn {
   background: none;
   border: none;
   color: #fff;
-  font-size: 20px;
+  font-size: 24px;
   cursor: pointer;
-  padding: 0;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 4px;
   border-radius: 4px;
-  transition: background-color 0.2s;
 }
 
 .chatbot-close-btn:hover {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Messages Area */
+/* Messages */
 .chatbot-messages {
   flex: 1;
   padding: 16px;
@@ -97,179 +110,98 @@
 }
 
 .chatbot-message {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   padding: 12px;
   border-radius: 8px;
   max-width: 80%;
-  position: relative;
-}
-
-.bot-message {
-  background: #f5f5f5;
-  color: #000;
-  border: 1px solid #ddd;
-  align-self: flex-start;
 }
 
 .user-message {
-  background: #000;
-  color: #fff;
-  align-self: flex-end;
+  background: #007bff;
+  color: white;
   margin-left: auto;
+  text-align: right;
+}
+
+.bot-message {
+  background: #f8f9fa;
+  color: #333;
+  margin-right: auto;
 }
 
 .message-time {
-  display: block;
-  font-size: 10px;
+  font-size: 11px;
   opacity: 0.7;
+  display: block;
   margin-top: 4px;
 }
 
-/* Input Area */
+/* Input */
 .chatbot-input {
   padding: 16px;
-  background: #fff;
-  border-top: 2px solid #000;
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
   display: flex;
   gap: 8px;
 }
 
-.chatbot-input-field {
+.chatbot-input input {
   flex: 1;
   padding: 12px;
-  border: 2px solid #000;
+  border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
+}
+
+.chatbot-input input:focus {
   outline: none;
-  transition: border-color 0.2s;
-  background: #fff;
-  color: #000;
+  border-color: #007bff;
 }
 
-.chatbot-input-field:focus {
-  border-color: #666;
-}
-
-.chatbot-input-field::placeholder {
-  color: #666;
-}
-
-.chatbot-send-btn {
-  padding: 12px 16px;
-  background: #000;
-  color: #fff;
-  border: 2px solid #000;
+.chatbot-input button {
+  padding: 12px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 50px;
 }
 
-.chatbot-send-btn:hover {
-  background: #fff;
-  color: #000;
+.chatbot-input button:hover:not(:disabled) {
+  background: #0056b3;
 }
 
-.chatbot-send-btn:disabled {
+.chatbot-input button:disabled {
   background: #ccc;
-  color: #666;
-  border-color: #ccc;
   cursor: not-allowed;
 }
 
-.mic-icon {
-  width: 20px;
-  height: 20px;
-  fill: currentColor;
-}
-
-.send-icon {
-  width: 16px;
-  height: 16px;
-  fill: currentColor;
-}
-
-.stop-icon {
-  width: 16px;
-  height: 16px;
-  fill: currentColor;
-}
-
-/* Audio Visualizer */
-.audio-visualizer {
-  padding: 12px;
+/* Message Links */
+.message-links {
+  margin-top: 8px;
+  padding: 8px;
   background: #f8f9fa;
-  border-bottom: 1px solid #ddd;
-  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
 }
 
-.visualizer-bars {
-  display: flex;
-  align-items: end;
-  justify-content: center;
-  gap: 2px;
-  height: 40px;
-  margin-bottom: 8px;
+.message-link {
+  display: block;
+  color: #007bff;
+  text-decoration: none;
+  margin: 4px 0;
+  font-size: 14px;
 }
 
-.visualizer-bar {
-  width: 4px;
-  min-height: 2px;
-  background: #007bff;
-  border-radius: 2px;
-  transition: all 0.1s ease;
+.message-link:hover {
+  text-decoration: underline;
 }
 
-.recording-indicator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 12px;
-  color: #dc3545;
-  font-weight: 500;
-}
-
-.recording-dot {
-  width: 8px;
-  height: 8px;
-  background: #dc3545;
-  border-radius: 50%;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-.chatbot-send-btn.recording {
-  background: #dc3545 !important;
-  border-color: #dc3545 !important;
-}
-
-.chatbot-send-btn.recording:hover {
-  background: #c82333 !important;
-  color: #fff !important;
-}
-
-/* Responsive Design */
-@media (max-width: 480px) {
-  .chatbot-interface {
-    width: 350px;
-    height: 500px;
-    bottom: 70px;
-  }
-  
-  .chatbot-toggle-btn {
-    width: 50px;
-    height: 50px;
-    font-size: 20px;
-  }
+/* Message Metadata */
+.message-meta {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
 }

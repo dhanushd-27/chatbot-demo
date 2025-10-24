@@ -1,4 +1,4 @@
-/* Global styles - Only chatbot widget */
+/* Global Reset */
 * {
   margin: 0;
   padding: 0;
@@ -9,27 +9,18 @@ body {
   margin: 0;
   padding: 0;
   background: transparent;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  overflow: hidden; /* Prevent any scrolling */
+  font-family: system-ui, Arial, sans-serif;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
 #root {
   margin: 0;
   padding: 0;
   background: transparent;
-  height: auto;
-  width: auto;
+  height: 100vh;
+  width: 100vw;
   position: relative;
-  overflow: hidden; /* Prevent any overflow */
-}
-
-/* Show only the chatbot widget */
-.App {
-  display: block !important;
-}
-
-.chatbot-widget {
-  display: block !important;
+  overflow: hidden;
 }

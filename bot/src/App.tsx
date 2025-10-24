@@ -1,13 +1,14 @@
-import './App.css'
-import ChatbotWidget from './ChatbotWidget'
+import './App.css';
+import ChatbotWidget from './ChatbotWidget';
 
 function App() {
+  console.log('🚀 App component rendering!');
+  
   return (
     <div className="App">
-      {/* Chatbot Widget - Only content */}
       <ChatbotWidget />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
