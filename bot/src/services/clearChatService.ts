@@ -1,29 +1,44 @@
 import { apiRequest, type ApiResponse } from './api';
+import { getSessionIdsFromStorage } from './sessionService';
 
-// Interface for clear chat request
+// Interface for clear chat request (matching backend API)
 export interface ClearChatRequest {
-  sessionId: string;
+  currentSessionId?: string;
+  previousSessionId?: string;
 }
 
-// Interface for clear chat response
+// Interface for clear chat response (matching backend API)
 export interface ClearChatResponse {
-  newSessionId: string;
   message: string;
   archivedTurns: number;
+  currentSessionId: string;
+  previousSessionId: string;
 }
 
 /**
- * Clears the chat session and creates a new one
- * @param sessionId - The current session ID to clear
- * @returns Promise with API response containing new session ID
+ * Clears the chat session and archives it
+ * Uses currentSessionId and previousSessionId from localStorage
+ * @param currentSessionId - Optional current session ID (if not provided, will use localStorage)
+ * @param previousSessionId - Optional previous session ID (if not provided, will use localStorage)
+ * @returns Promise with API response
  */
 export const clearChat = async (
-  sessionId: string
+  currentSessionId?: string,
+  previousSessionId?: string
 ): Promise<ApiResponse<ClearChatResponse>> => {
-  console.log('🗑️ Clearing chat session:', sessionId);
+  // Get session IDs from localStorage if not provided
+  const sessionIds = getSessionIdsFromStorage();
+  const effectiveCurrentSessionId = currentSessionId || sessionIds.currentSessionId;
+  const effectivePreviousSessionId = previousSessionId || sessionIds.previousSessionId;
+  
+  console.log('🗑️ Clearing chat session:', {
+    currentSessionId: effectiveCurrentSessionId,
+    previousSessionId: effectivePreviousSessionId,
+  });
   
   const requestBody: ClearChatRequest = {
-    sessionId,
+    currentSessionId: effectiveCurrentSessionId,
+    previousSessionId: effectivePreviousSessionId,
   };
 
   try {

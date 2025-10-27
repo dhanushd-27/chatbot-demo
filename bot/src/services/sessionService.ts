@@ -48,13 +48,18 @@ export const saveSessionIdsToStorage = (
 };
 
 /**
- * Generates a new 6-digit random session ID
- * @returns A unique 6-digit session ID
+ * Generates a new 12-character alphanumeric session ID
+ * @returns A unique 12-character alphanumeric session ID
  */
 export const generateSessionId = (): string => {
-  // Generate a random 6-digit number
-  const random6Digit = Math.floor(100000 + Math.random() * 900000);
-  return random6Digit.toString();
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  
+  for (let i = 0; i < 12; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  return result;
 };
 
 /**
@@ -64,7 +69,7 @@ export const generateSessionId = (): string => {
 export const getCurrentSessionId = (): string | null => {
   try {
     const sessionId = localStorage.getItem(CURRENT_SESSION_KEY);
-    console.log('📦 Retrieved current session ID:', sessionId);
+    console.log('📦 Retrieved current session ID from localStorage:', sessionId);
     return sessionId;
   } catch (error) {
     console.error('❌ Error reading current session ID:', error);
@@ -79,7 +84,7 @@ export const getCurrentSessionId = (): string | null => {
 export const setCurrentSessionId = (sessionId: string): void => {
   try {
     localStorage.setItem(CURRENT_SESSION_KEY, sessionId);
-    console.log('💾 Saved current session ID:', sessionId);
+    console.log('💾 Saved current session ID to localStorage:', sessionId);
   } catch (error) {
     console.error('❌ Error saving current session ID:', error);
   }
@@ -112,4 +117,47 @@ export const clearSessionData = (): void => {
   } catch (error) {
     console.error('❌ Error clearing session data:', error);
   }
+};
+
+/**
+ * Creates a new session and moves current session to previous
+ * This is typically called when starting a new conversation
+ * @returns The new session ID
+ */
+export const createNewSession = (): string => {
+  try {
+    // Get current session ID before creating new one
+    const currentSessionId = getCurrentSessionId();
+    
+    // Generate new session ID
+    const newSessionId = generateSessionId();
+    
+    // Save previous session ID if it exists
+    if (currentSessionId) {
+      localStorage.setItem(PREVIOUS_SESSION_KEY, currentSessionId);
+    }
+    
+    // Set new session as current
+    localStorage.setItem(CURRENT_SESSION_KEY, newSessionId);
+    
+    console.log('🆕 Created new session:', {
+      previousSessionId: currentSessionId || '',
+      currentSessionId: newSessionId,
+    });
+    
+    return newSessionId;
+  } catch (error) {
+    console.error('❌ Error creating new session:', error);
+    // Fallback to simple generation
+    return generateSessionId();
+  }
+};
+
+/**
+ * Checks if this is the first message in a conversation
+ * @returns true if no current session exists
+ */
+export const isFirstMessage = (): boolean => {
+  const currentSessionId = getCurrentSessionId();
+  return !currentSessionId;
 };

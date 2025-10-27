@@ -2,6 +2,8 @@
  * Voice Services: helpers to work with audio blob URLs and backend transcription
  */
 
+import { getCurrentSessionId } from './sessionService';
+
 /**
  * Fetch a Blob from a blob URL
  * @param {string} blobUrl
@@ -83,12 +85,12 @@ const floatTo16BitPCM = (output: DataView, offset: number, input: Float32Array):
 export const convertBlobToWavBlob = async (inputBlob: Blob): Promise<Blob> => {
   try {
     const arrayBuffer = await inputBlob.arrayBuffer();
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
     const wavBlob = audioBufferToWavBlob(audioBuffer);
     try { audioContext.close(); } catch { /* ignore */ }
     return wavBlob;
-  } catch (err) {
+  } catch {
     return inputBlob;
   }
 };
@@ -96,11 +98,14 @@ export const convertBlobToWavBlob = async (inputBlob: Blob): Promise<Blob> => {
 /**
  * Transcribe audio by sending a WAV (or original) Blob to backend /voice endpoint
  * @param {string} blobUrl
- * @param {string} sessionId
+ * @param {string} sessionId Optional session ID (if not provided, will use current session from localStorage)
  * @param {string} backendUrl Optional explicit backend URL. Falls back to config/env.
- * @returns {Promise<any>} Parsed JSON response from backend
+ * @returns {Promise<unknown>} Parsed JSON response from backend
  */
-export const transcribeAudioFromBlobUrl = async (blobUrl: string, sessionId: string, backendUrl?: string): Promise<any> => {
+export const transcribeAudioFromBlobUrl = async (blobUrl: string, sessionId?: string, backendUrl?: string): Promise<unknown> => {
+  // Use provided sessionId or get current session from localStorage
+  const effectiveSessionId = sessionId || getCurrentSessionId() || '';
+  
   // Resolve backend URL with sensible fallbacks
   let resolvedBackendUrl = backendUrl;
   if (!resolvedBackendUrl) {
@@ -121,7 +126,7 @@ export const transcribeAudioFromBlobUrl = async (blobUrl: string, sessionId: str
   // Prefer filename with .wav if conversion occurred
   const filename = wavBlob.type === 'audio/wav' ? 'recording.wav' : 'recording.webm';
   formData.append('file', wavBlob, filename);
-  formData.append('session_id', sessionId);
+  formData.append('sessionId', effectiveSessionId);
   
   const base = resolvedBackendUrl.replace(/\/$/, '');
   const response = await fetch(`${base}/voice`, {

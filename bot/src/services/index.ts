@@ -23,5 +23,7 @@ export {
   getCurrentSessionId,
   setCurrentSessionId,
   getOrCreateSessionId,
-  clearSessionData 
+  clearSessionData,
+  createNewSession,
+  isFirstMessage
 } from './sessionService';

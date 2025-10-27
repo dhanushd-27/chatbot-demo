@@ -1,4 +1,5 @@
 import { apiRequest, type ApiResponse } from './api';
+import { getOrCreateSessionId, getCurrentSessionId, setCurrentSessionId, isFirstMessage } from './sessionService';
 
 // Interface for query request (matching backend API)
 export interface QueryRequest {
@@ -40,8 +41,9 @@ export interface QueryResponse {
 
 /**
  * Sends a query message to the chatbot API
+ * Session ID is automatically created on first message if not provided
  * @param message - The user's message
- * @param sessionId - Optional session identifier
+ * @param sessionId - Optional session identifier (if not provided, will be created automatically)
  * @param meta - Optional metadata
  * @param idempotencyKey - Optional idempotency key
  * @returns Promise with API response
@@ -52,10 +54,30 @@ export const sendQuery = async (
   meta?: Record<string, any>,
   idempotencyKey?: string
 ): Promise<ApiResponse<QueryResponse>> => {
-  console.log('🔍 Sending query request:', { sessionId, message, meta, idempotencyKey });
+  // Determine the session ID to use
+  let effectiveSessionId = sessionId;
+  
+  if (!effectiveSessionId) {
+    if (isFirstMessage()) {
+      // No session exists - this is the first message, create a new session
+      effectiveSessionId = getOrCreateSessionId();
+      console.log('🆕 Created new session for first message:', effectiveSessionId);
+    } else {
+      // Use existing session ID
+      effectiveSessionId = getCurrentSessionId() || '';
+      console.log('🔄 Using existing session:', effectiveSessionId);
+    }
+  }
+  
+  console.log('🔍 Sending query request:', { 
+    sessionId: effectiveSessionId, 
+    message, 
+    meta, 
+    idempotencyKey 
+  });
   
   const requestBody: QueryRequest = {
-    sessionId,
+    sessionId: effectiveSessionId,
     message,
     meta,
     idempotencyKey,
@@ -69,6 +91,11 @@ export const sendQuery = async (
 
     if (response.success) {
       console.log('✅ Query request successful:', response.data);
+      
+      // Update localStorage with the session ID returned from the server
+      if (response.data?.sessionId) {
+        setCurrentSessionId(response.data.sessionId);
+      }
     } else {
       console.error('❌ Query request failed:', response.error);
     }
@@ -85,8 +112,9 @@ export const sendQuery = async (
 
 /**
  * Sends a query with retry logic
+ * Session ID is automatically created on first message if not provided
  * @param message - The user's message
- * @param sessionId - Optional session identifier
+ * @param sessionId - Optional session identifier (if not provided, will be created automatically)
  * @param maxRetries - Maximum number of retry attempts (default: 3)
  * @param meta - Optional metadata
  * @param idempotencyKey - Optional idempotency key

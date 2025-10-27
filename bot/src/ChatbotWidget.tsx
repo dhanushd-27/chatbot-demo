@@ -5,7 +5,7 @@ import './ChatbotWidget.css';
 import { 
   sendQuery, 
   checkHealth, 
-  getOrCreateSessionId, 
+  getCurrentSessionId, 
   setCurrentSessionId,
   clearChat,
   type QueryResponse 
@@ -39,7 +39,6 @@ const ChatbotWidget: React.FC = () => {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionId, setSessionId] = useState<string>('');
   const [apiConnected, setApiConnected] = useState<boolean | null>(null);
   
   // Microphone states
@@ -66,15 +65,18 @@ const ChatbotWidget: React.FC = () => {
     }
   });
 
-  // Initialize session and check API health
+  // Initialize chatbot and check API health (no session creation on mount)
   useEffect(() => {
     console.log('🤖 ChatbotWidget mounted!');
     const initializeChatbot = async () => {
       try {
-        // Get or create session ID
-        const currentSessionId = getOrCreateSessionId();
-        setSessionId(currentSessionId);
-        console.log('🆔 Session ID:', currentSessionId);
+        // Check if we have an existing session ID (but don't create one yet)
+        const existingSessionId = getCurrentSessionId();
+        if (existingSessionId) {
+          console.log('🔄 Found existing session ID:', existingSessionId);
+        } else {
+          console.log('📝 No existing session - will create on first message');
+        }
 
         // Check API health
         const healthResponse = await checkHealth();
@@ -101,18 +103,21 @@ const ChatbotWidget: React.FC = () => {
 
   const sendMessageToAPI = async (userMessage: string): Promise<Message> => {
     try {
-      console.log('📤 Sending to API:', { sessionId, message: userMessage });
+      // Always get sessionId from localStorage for every request
+      const currentSessionId = getCurrentSessionId();
+      console.log('📤 Sending to API:', { sessionId: currentSessionId, message: userMessage });
       
-      const response = await sendQuery(userMessage, sessionId);
+      // Send query - the sendQuery function will handle session creation automatically
+      const response = await sendQuery(userMessage, currentSessionId || undefined);
       
       if (response.success && response.data) {
         const apiResponse: QueryResponse = response.data;
         console.log('✅ API response:', apiResponse);
         
-        // Update session ID if changed
-        if (apiResponse.sessionId !== sessionId) {
-          setSessionId(apiResponse.sessionId);
+        // Always update session ID from the response (this handles both new and existing sessions)
+        if (apiResponse.sessionId) {
           setCurrentSessionId(apiResponse.sessionId);
+          console.log('💾 Updated session ID in localStorage:', apiResponse.sessionId);
         }
         
         return {
@@ -184,18 +189,18 @@ const ChatbotWidget: React.FC = () => {
   };
 
   const handleClearChat = async () => {
-    if (!sessionId || isLoading) return;
+    const currentSessionId = getCurrentSessionId();
+    if (!currentSessionId || isLoading) return;
 
     try {
-      console.log('🗑️ Clearing chat session:', sessionId);
+      console.log('🗑️ Clearing chat session:', currentSessionId);
       setIsLoading(true);
 
-      const response = await clearChat(sessionId);
+      const response = await clearChat();
       
       if (response.success && response.data) {
         // Update session ID with new one from backend
-        const newSessionId = response.data.newSessionId;
-        setSessionId(newSessionId);
+        const newSessionId = response.data.currentSessionId;
         setCurrentSessionId(newSessionId);
         
         // Clear messages and reset to welcome message
@@ -442,7 +447,7 @@ const ChatbotWidget: React.FC = () => {
     
     const runTranscription = async () => {
       try {
-        const result = await transcribeAudioFromBlobUrl(mediaBlobUrl, sessionId);
+        const result = await transcribeAudioFromBlobUrl(mediaBlobUrl) as any;
         if (result && result.transcript) {
           // Populate the input box with the transcribed text
           // Let the user decide whether to send it or not
@@ -455,8 +460,8 @@ const ChatbotWidget: React.FC = () => {
             setInputValue(result.answer);
           }
         }
-      } catch (error) {
-        console.error('❌ Voice transcription error:', error);
+      } catch {
+        console.error('❌ Voice transcription error');
         // Show error in a temporary way - could also show an alert or message
         alert("Sorry, I couldn't process your voice message. Please try again.");
       } finally {
@@ -472,7 +477,7 @@ const ChatbotWidget: React.FC = () => {
       }
     };
     runTranscription();
-  }, [shouldTranscribe, mediaBlobUrl, sessionId]);
+  }, [shouldTranscribe, mediaBlobUrl]);
 
   console.log('🎯 ChatbotWidget rendering, isOpen:', isOpen);
   
@@ -586,7 +591,7 @@ const ChatbotWidget: React.FC = () => {
                 <button 
                   className="clear-chat-btn"
                   onClick={handleClearChat}
-                  disabled={isLoading || !sessionId}
+                  disabled={isLoading || !getCurrentSessionId()}
                   title="Clear chat history"
                 >
                   Clear
