@@ -443,29 +443,22 @@ const ChatbotWidget: React.FC = () => {
     const runTranscription = async () => {
       try {
         const result = await transcribeAudioFromBlobUrl(mediaBlobUrl, sessionId);
-        if (result && result.answer) {
-          // Add the transcribed message as a user message
-          const userMessage: Message = {
-            id: Date.now(),
-            text: result.answer,
-            isUser: true,
-            timestamp: new Date()
-          };
-          setMessages(prev => [...prev, userMessage]);
-          
-          // Send the transcribed text to the API
-          const botResponse = await sendMessageToAPI(result.answer);
-          setMessages(prev => [...prev, botResponse]);
+        if (result && result.transcript) {
+          // Populate the input box with the transcribed text
+          // Let the user decide whether to send it or not
+          console.log('📝 Voice transcription result:', result);
+          setInputValue(result.transcript);
+        } else {
+          // Fallback to result.answer if transcript is not available
+          if (result && result.answer) {
+            console.log('📝 Voice transcription result (using answer):', result);
+            setInputValue(result.answer);
+          }
         }
       } catch (error) {
         console.error('❌ Voice transcription error:', error);
-        const errorMessage: Message = {
-          id: Date.now(),
-          text: "Sorry, I couldn't process your voice message. Please try again.",
-          isUser: false,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, errorMessage]);
+        // Show error in a temporary way - could also show an alert or message
+        alert("Sorry, I couldn't process your voice message. Please try again.");
       } finally {
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
