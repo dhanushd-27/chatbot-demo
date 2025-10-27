@@ -7,6 +7,7 @@ import {
   checkHealth, 
   getOrCreateSessionId, 
   setCurrentSessionId,
+  clearChat,
   type QueryResponse 
 } from './services';
 import { transcribeAudioFromBlobUrl } from './services/voiceService';
@@ -179,6 +180,54 @@ const ChatbotWidget: React.FC = () => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSendMessage();
+    }
+  };
+
+  const handleClearChat = async () => {
+    if (!sessionId || isLoading) return;
+
+    try {
+      console.log('🗑️ Clearing chat session:', sessionId);
+      setIsLoading(true);
+
+      const response = await clearChat(sessionId);
+      
+      if (response.success && response.data) {
+        // Update session ID with new one from backend
+        const newSessionId = response.data.newSessionId;
+        setSessionId(newSessionId);
+        setCurrentSessionId(newSessionId);
+        
+        // Clear messages and reset to welcome message
+        setMessages([{
+          id: 1,
+          text: "Hello! How can I help you today?",
+          isUser: false,
+          timestamp: new Date()
+        }]);
+        
+        console.log(`✅ Chat cleared successfully. ${response.data.archivedTurns} turns archived.`);
+      } else {
+        console.error('❌ Clear chat failed:', response.error);
+        // Still clear the UI even if backend fails
+        setMessages([{
+          id: 1,
+          text: "Hello! How can I help you today?",
+          isUser: false,
+          timestamp: new Date()
+        }]);
+      }
+    } catch (error) {
+      console.error('❌ Clear chat error:', error);
+      // Clear UI anyway for better UX
+      setMessages([{
+        id: 1,
+        text: "Hello! How can I help you today?",
+        isUser: false,
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -520,7 +569,8 @@ const ChatbotWidget: React.FC = () => {
                   onKeyPress={handleKeyPress}
                   disabled={isLoading || isVoiceLoading}
                 />
-                {!inputValue.trim() && (
+                {/* Dynamic button: Microphone when empty, Send when text exists */}
+                {!inputValue.trim() ? (
                   <button 
                     className="microphone-btn"
                     onClick={handleMicrophoneClick}
@@ -529,12 +579,24 @@ const ChatbotWidget: React.FC = () => {
                   >
                     <img src="/microphone.svg" alt="microphone" className="microphone-icon" />
                   </button>
+                ) : (
+                  <button 
+                    className="send-btn"
+                    onClick={handleSendMessage}
+                    disabled={isLoading || isVoiceLoading}
+                    title="Send message"
+                  >
+                    Send
+                  </button>
                 )}
+                {/* Clear chat button - always visible */}
                 <button 
-                  onClick={handleSendMessage}
-                  disabled={!inputValue.trim() || isLoading || isVoiceLoading}
+                  className="clear-chat-btn"
+                  onClick={handleClearChat}
+                  disabled={isLoading || !sessionId}
+                  title="Clear chat history"
                 >
-                  Send
+                  Clear
                 </button>
               </>
             ) : (
