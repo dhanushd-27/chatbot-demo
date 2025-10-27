@@ -1,5 +1,5 @@
 import { apiRequest, type ApiResponse } from './api';
-import { getOrCreateSessionId, getCurrentSessionId, setCurrentSessionId, isFirstMessage } from './sessionService';
+import { getCurrentSessionId, setCurrentSessionId } from './sessionService';
 
 // Interface for query request (matching backend API)
 export interface QueryRequest {
@@ -54,27 +54,12 @@ export const sendQuery = async (
   meta?: Record<string, any>,
   idempotencyKey?: string
 ): Promise<ApiResponse<QueryResponse>> => {
-  // Determine the session ID to use
-  let effectiveSessionId = sessionId;
+  // Get session ID from localStorage (should exist from initialization)
+  const effectiveSessionId = sessionId || getCurrentSessionId() || undefined;
   
-  if (!effectiveSessionId) {
-    if (isFirstMessage()) {
-      // No session exists - this is the first message, create a new session
-      effectiveSessionId = getOrCreateSessionId();
-      console.log('🆕 Created new session for first message:', effectiveSessionId);
-    } else {
-      // Use existing session ID
-      effectiveSessionId = getCurrentSessionId() || '';
-      console.log('🔄 Using existing session:', effectiveSessionId);
-    }
-  }
-  
-  console.log('🔍 Sending query request:', { 
-    sessionId: effectiveSessionId, 
-    message, 
-    meta, 
-    idempotencyKey 
-  });
+  console.log('🔍 Query service - input sessionId:', sessionId);
+  console.log('🔍 Query service - getCurrentSessionId():', getCurrentSessionId());
+  console.log('🔍 Final effectiveSessionId:', effectiveSessionId);
   
   const requestBody: QueryRequest = {
     sessionId: effectiveSessionId,
@@ -82,6 +67,8 @@ export const sendQuery = async (
     meta,
     idempotencyKey,
   };
+
+  console.log('📤 Request body:', requestBody);
 
   try {
     const response = await apiRequest<QueryResponse>('/query', {
@@ -95,6 +82,7 @@ export const sendQuery = async (
       // Update localStorage with the session ID returned from the server
       if (response.data?.sessionId) {
         setCurrentSessionId(response.data.sessionId);
+        console.log('💾 Updated session ID in localStorage:', response.data.sessionId);
       }
     } else {
       console.error('❌ Query request failed:', response.error);

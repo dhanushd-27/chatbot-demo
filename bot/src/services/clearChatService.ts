@@ -1,5 +1,5 @@
 import { apiRequest, type ApiResponse } from './api';
-import { getSessionIdsFromStorage } from './sessionService';
+import { getSessionIdsFromStorage, handleClearChat } from './sessionService';
 
 // Interface for clear chat request (matching backend API)
 export interface ClearChatRequest {
@@ -17,29 +17,26 @@ export interface ClearChatResponse {
 
 /**
  * Clears the chat session and archives it
- * Uses currentSessionId and previousSessionId from localStorage
- * @param currentSessionId - Optional current session ID (if not provided, will use localStorage)
- * @param previousSessionId - Optional previous session ID (if not provided, will use localStorage)
+ * Uses handleClearChat to manage session transitions
  * @returns Promise with API response
  */
-export const clearChat = async (
-  currentSessionId?: string,
-  previousSessionId?: string
-): Promise<ApiResponse<ClearChatResponse>> => {
-  // Get session IDs from localStorage if not provided
+export const clearChat = async (): Promise<ApiResponse<ClearChatResponse>> => {
+  // Get current session IDs from localStorage
   const sessionIds = getSessionIdsFromStorage();
-  const effectiveCurrentSessionId = currentSessionId || sessionIds.currentSessionId;
-  const effectivePreviousSessionId = previousSessionId || sessionIds.previousSessionId;
   
-  console.log('🗑️ Clearing chat session:', {
-    currentSessionId: effectiveCurrentSessionId,
-    previousSessionId: effectivePreviousSessionId,
-  });
+  console.log('🗑️ Clearing chat session with localStorage data:', sessionIds);
+  
+  // Handle session management locally first
+  const sessionData = handleClearChat();
+  
+  console.log('🗑️ After handleClearChat, new session data:', sessionData);
   
   const requestBody: ClearChatRequest = {
-    currentSessionId: effectiveCurrentSessionId,
-    previousSessionId: effectivePreviousSessionId,
+    currentSessionId: sessionIds.currentSessionId, // The session we're archiving (from localStorage)
+    previousSessionId: sessionIds.previousSessionId, // The previous session (from localStorage)
   };
+
+  console.log('📤 Clear chat request body:', requestBody);
 
   try {
     const response = await apiRequest<ClearChatResponse>('/clear-chat', {

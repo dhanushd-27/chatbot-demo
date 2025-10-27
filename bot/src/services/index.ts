@@ -25,5 +25,8 @@ export {
   getOrCreateSessionId,
   clearSessionData,
   createNewSession,
-  isFirstMessage
+  isFirstMessage,
+  testLocalStorage,
+  handleClearChat,
+  createDefaultSession
 } from './sessionService';

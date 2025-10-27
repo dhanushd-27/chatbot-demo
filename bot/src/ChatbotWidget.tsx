@@ -7,6 +7,9 @@ import {
   checkHealth, 
   getCurrentSessionId, 
   setCurrentSessionId,
+  getOrCreateSessionId,
+  createDefaultSession,
+  testLocalStorage,
   clearChat,
   type QueryResponse 
 } from './services';
@@ -65,18 +68,61 @@ const ChatbotWidget: React.FC = () => {
     }
   });
 
-  // Initialize chatbot and check API health (no session creation on mount)
+  // Initialize chatbot and create session on every reload
   useEffect(() => {
     console.log('🤖 ChatbotWidget mounted!');
+    
+    // Add debugging functions to window for manual testing
+    (window as any).debugSession = {
+      getCurrentSessionId,
+      setCurrentSessionId,
+      getOrCreateSessionId,
+      createDefaultSession,
+      testLocalStorage,
+      clearSessionData: () => {
+        localStorage.removeItem('chatbot_current_session_id');
+        localStorage.removeItem('chatbot_previous_session_id');
+        console.log('🗑️ Cleared all session data');
+      },
+      showLocalStorage: () => {
+        console.log('📦 All localStorage:', {
+          'chatbot_current_session_id': localStorage.getItem('chatbot_current_session_id'),
+          'chatbot_previous_session_id': localStorage.getItem('chatbot_previous_session_id') || 'undefined',
+          allKeys: Object.keys(localStorage)
+        });
+      }
+    };
+    
     const initializeChatbot = async () => {
       try {
-        // Check if we have an existing session ID (but don't create one yet)
-        const existingSessionId = getCurrentSessionId();
-        if (existingSessionId) {
-          console.log('🔄 Found existing session ID:', existingSessionId);
-        } else {
-          console.log('📝 No existing session - will create on first message');
+        // Test localStorage first
+        const localStorageTest = testLocalStorage();
+        console.log('🧪 localStorage test result:', localStorageTest);
+        
+        if (!localStorageTest.working) {
+          console.error('❌ localStorage is not working properly!');
+          return;
         }
+        
+        // Check if we have existing current session
+        const existingCurrentSession = getCurrentSessionId();
+        
+        if (!existingCurrentSession) {
+          // Create only current session ID by default
+          const session = createDefaultSession();
+          console.log('🆔 Created default current session:', session);
+        } else {
+          console.log('🔄 Found existing current session:', existingCurrentSession);
+        }
+        
+        // Verify current session exists
+        const finalCurrentSession = getCurrentSessionId();
+        const finalPreviousSession = localStorage.getItem('chatbot_previous_session_id');
+        
+        console.log('🔍 Final session verification:', {
+          current: finalCurrentSession,
+          previous: finalPreviousSession || 'undefined'
+        });
 
         // Check API health
         const healthResponse = await checkHealth();
@@ -199,10 +245,6 @@ const ChatbotWidget: React.FC = () => {
       const response = await clearChat();
       
       if (response.success && response.data) {
-        // Update session ID with new one from backend
-        const newSessionId = response.data.currentSessionId;
-        setCurrentSessionId(newSessionId);
-        
         // Clear messages and reset to welcome message
         setMessages([{
           id: 1,
