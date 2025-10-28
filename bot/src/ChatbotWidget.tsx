@@ -10,7 +10,7 @@ import {
   getOrCreateSessionId,
   createDefaultSession,
   testLocalStorage,
-  clearChat,
+  sessionInit,
   type QueryResponse 
 } from './services';
 import { transcribeAudioFromBlobUrl } from './services/voiceService';
@@ -68,9 +68,15 @@ const ChatbotWidget: React.FC = () => {
     }
   });
 
-  // Initialize chatbot and create session on every reload
+  // Initialize chatbot and clear all sessions on mount
   useEffect(() => {
     console.log('🤖 ChatbotWidget mounted!');
+    
+    // Clear all session data when user visits the website
+    console.log('🗑️ Clearing all session data on website visit...');
+    localStorage.removeItem('chatbot_current_session_id');
+    localStorage.removeItem('chatbot_previous_session_id');
+    console.log('✅ All session data cleared');
     
     // Add debugging functions to window for manual testing
     (window as any).debugSession = {
@@ -103,26 +109,6 @@ const ChatbotWidget: React.FC = () => {
           console.error('❌ localStorage is not working properly!');
           return;
         }
-        
-        // Check if we have existing current session
-        const existingCurrentSession = getCurrentSessionId();
-        
-        if (!existingCurrentSession) {
-          // Create only current session ID by default
-          const session = createDefaultSession();
-          console.log('🆔 Created default current session:', session);
-        } else {
-          console.log('🔄 Found existing current session:', existingCurrentSession);
-        }
-        
-        // Verify current session exists
-        const finalCurrentSession = getCurrentSessionId();
-        const finalPreviousSession = localStorage.getItem('chatbot_previous_session_id');
-        
-        console.log('🔍 Final session verification:', {
-          current: finalCurrentSession,
-          previous: finalPreviousSession || 'undefined'
-        });
 
         // Check API health
         const healthResponse = await checkHealth();
@@ -144,6 +130,32 @@ const ChatbotWidget: React.FC = () => {
 
   const toggleChat = () => {
     console.log('💬 Toggle clicked! Current state:', isOpen);
+    
+    // If opening the chat for the first time, check/create session
+    if (!isOpen) {
+      console.log('🔍 Opening chat - checking session...');
+      
+      // Check if we have existing current session
+      const existingCurrentSession = getCurrentSessionId();
+      
+      if (!existingCurrentSession) {
+        // Create only current session ID when user first opens the chat
+        const session = createDefaultSession();
+        console.log('🆔 Created new session on chat open:', session);
+      } else {
+        console.log('🔄 Found existing current session:', existingCurrentSession);
+      }
+      
+      // Verify current session exists
+      const finalCurrentSession = getCurrentSessionId();
+      const finalPreviousSession = localStorage.getItem('chatbot_previous_session_id');
+      
+      console.log('🔍 Final session verification:', {
+        current: finalCurrentSession,
+        previous: finalPreviousSession || 'undefined'
+      });
+    }
+    
     setIsOpen(!isOpen);
   };
 
@@ -241,8 +253,11 @@ const ChatbotWidget: React.FC = () => {
     try {
       console.log('🗑️ Clearing chat session:', currentSessionId);
       setIsLoading(true);
-
-      const response = await clearChat();
+      
+      // Initialize a new session. This will:
+      // - read previousSessionId from localStorage (chatbot_current_session_id)
+      // - generate and persist a newSessionId to localStorage
+      const response = await sessionInit();
       
       if (response.success && response.data) {
         // Clear messages and reset to welcome message
@@ -253,9 +268,9 @@ const ChatbotWidget: React.FC = () => {
           timestamp: new Date()
         }]);
         
-        console.log(`✅ Chat cleared successfully. ${response.data.archivedTurns} turns archived.`);
+        console.log(`✅ Session initialized successfully. ${response.data.archivedTurns} turns archived.`);
       } else {
-        console.error('❌ Clear chat failed:', response.error);
+        console.error('❌ Session init failed:', response.error);
         // Still clear the UI even if backend fails
         setMessages([{
           id: 1,
@@ -265,7 +280,7 @@ const ChatbotWidget: React.FC = () => {
         }]);
       }
     } catch (error) {
-      console.error('❌ Clear chat error:', error);
+      console.error('❌ Session init error:', error);
       // Clear UI anyway for better UX
       setMessages([{
         id: 1,
