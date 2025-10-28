@@ -15,6 +15,22 @@ Currently, no authentication is required for these endpoints.
 
 ### 1. Health Check Endpoints
 
+#### GET `/`
+**Description:** Root endpoint that returns basic application info.
+
+**Request Body:** None
+
+**Response Body:**
+```json
+{
+  "name": "Org X Chatbot API",
+  "version": "2.0.0",
+  "status": "running",
+  "environment": "development",
+  "docs": "/docs"
+}
+```
+
 #### GET `/health`
 **Description:** Returns the health status of all services and dependencies.
 
@@ -153,7 +169,7 @@ chatbot_requests_total 0
 ```json
 {
   "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "message": "What is Org X PrimeSteel?",
+  "message": "What is Org X Neosteel?",
   "meta": {"source": "web_app"},
   "idempotencyKey": "req-123"
 }
@@ -163,18 +179,18 @@ chatbot_requests_total 0
 ```json
 {
   "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "answer": "Org X PrimeSteel is a premium TMT bar [[1]]...",
+  "answer": "Org X Neosteel is a premium TMT bar [[1]]...",
   "turn": {
     "turnId": "turn-123",
     "timestamp": "2025-10-23T14:30:00Z",
-    "userMessage": "What is Org X PrimeSteel?",
-    "assistantMessage": "Org X PrimeSteel is...",
+    "userMessage": "What is Org X Neosteel?",
+    "assistantMessage": "Org X Neosteel is...",
     "detectedLanguage": "en",
     "confidence": 0.95,
     "sources": ["source1"],
     "links": [{"number": "1", "title": "...", "url": "..."}]
   },
-  "links": [{"number": "1", "title": "Org X PrimeSteel", "url": "https://..."}],
+  "links": [{"number": "1", "title": "Org X Neosteel", "url": "https://..."}],
   "usage": {"detectedLanguage": "en", "confidence": 0.95, "sourcesUsed": 1}
 }
 ```
@@ -212,7 +228,7 @@ chatbot_requests_total 0
 ```json
 {
   "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "transcript": "What is Org X PrimeSteel?",
+  "transcript": "What is Org X Neosteel?",
   "detectedLang": "en",
   "confidence": 0.95
 }
@@ -269,6 +285,49 @@ curl -X POST "http://localhost:8000/voice?sessionId=your-session-id" \
 }
 ```
 
+#### DELETE `/session-init`
+**Description:** Initializes a new session immediately and archives the previous session asynchronously.
+
+**Request Body:**
+```json
+{
+  "newSessionId": "client-generated-session-id",
+  "previousSessionId": "previous-session-uuid"
+}
+```
+
+**Request Body Schema:**
+- `newSessionId` (required): New client-generated session ID to start using immediately
+- `previousSessionId` (optional): Previous session ID to archive in the background
+
+**Response Body:**
+```json
+{
+  "message": "New chat session ready. Previous session archiving started.",
+  "archivedTurns": 5,
+  "newSessionId": "client-generated-session-id",
+  "previousSessionId": "previous-session-uuid"
+}
+```
+
+**Example Request:**
+```json
+{
+  "newSessionId": "a3c2d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+  "previousSessionId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Example Response:**
+```json
+{
+  "message": "New chat session ready. Previous session archiving started.",
+  "archivedTurns": 5,
+  "newSessionId": "a3c2d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e",
+  "previousSessionId": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
 ## Error Responses
 
 All endpoints may return standard HTTP error responses:
@@ -318,7 +377,7 @@ All endpoints may return standard HTTP error responses:
    ```bash
    curl -X POST "http://localhost:8000/query" \
      -H "Content-Type: application/json" \
-     -d '{"message": "What is Org X PrimeSteel?"}'
+    -d '{"message": "What is Org X Neosteel?"}'
    ```
 
 2. **Continue Conversation:**

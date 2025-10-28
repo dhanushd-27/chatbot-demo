@@ -11,7 +11,7 @@ export interface SessionInitRequest {
 export interface SessionInitResponse {
   message: string;
   archivedTurns: number;
-  currentSessionId: string;
+  newSessionId: string;
   previousSessionId: string;
 }
 
@@ -42,7 +42,7 @@ export const sessionInit = async (): Promise<ApiResponse<SessionInitResponse>> =
 
   try {
     const response = await apiRequest<SessionInitResponse>('/session-init', {
-      method: 'POST',
+      method: 'DELETE',
       body: JSON.stringify(requestBody),
     });
 
