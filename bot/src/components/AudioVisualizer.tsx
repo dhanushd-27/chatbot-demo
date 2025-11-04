@@ -26,8 +26,8 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ isMicrophoneOn, analy
 
       analyserRef.current!.getByteFrequencyData(dataArray);
 
-      ctx.fillStyle = 'rgba(0, 123, 255, 0.1)';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Clear the canvas to keep background fully transparent
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const barWidth = (canvas.width / bufferLength) * 2.5;
       let barHeight;
@@ -36,7 +36,8 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ isMicrophoneOn, analy
       for (let i = 0; i < bufferLength; i++) {
         barHeight = (dataArray[i] / 255) * canvas.height;
 
-        ctx.fillStyle = `rgb(${barHeight + 100}, 50, 50)`;
+        // Draw bars in theme blue
+        ctx.fillStyle = '#007bff';
         ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
 
         x += barWidth + 1;
@@ -52,7 +53,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({ isMicrophoneOn, analy
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isMicrophoneOn]);
+  }, [isMicrophoneOn, analyserRef, animationFrameRef]);
 
   return (
     <canvas

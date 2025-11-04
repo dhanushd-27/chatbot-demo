@@ -429,7 +429,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 123, 255, 0.1);
+  background: transparent;
   border-radius: 6px;
   overflow: hidden;
 }
