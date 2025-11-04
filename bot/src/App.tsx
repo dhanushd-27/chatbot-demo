@@ -1,5 +1,5 @@
 import './App.css';
-import ChatbotWidget from './ChatbotWidget';
+import ChatbotWidget from './components/ChatbotWidget';
 
 function App() {
   console.log('🚀 App component rendering!');
