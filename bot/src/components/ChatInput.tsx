@@ -55,7 +55,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         )}
         <button 
           className="clear-chat-btn"
-          onClick={onClear}
+          onClick={() => { onClear(); onInputChange(''); }}
           disabled={isLoading || !hasSession}
           title="Clear chat history"
         >
