@@ -60,7 +60,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             disabled={isLoading || isVoiceLoading}
             title="Send message"
           >
-            Send
+            <img src="/send.svg" alt="send" className="send-icon" />
           </button>
         )}
         <button 
