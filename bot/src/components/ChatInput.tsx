@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface ChatInputProps {
   inputValue: string;
@@ -23,16 +23,26 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onClear,
   hasSession,
 }) => {
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [inputValue]);
   return (
     <div className="chatbot-input">
       <>
-        <input 
-          type="text" 
+        <textarea
+          ref={textareaRef}
           placeholder="Type your message..."
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
           onKeyPress={onKeyPress}
           disabled={isLoading || isVoiceLoading}
+          rows={1}
+          className="chat-textarea"
         />
         {!inputValue.trim() ? (
           <button 
@@ -67,5 +77,5 @@ const ChatInput: React.FC<ChatInputProps> = ({
 };
 
 export default ChatInput;
-
+ 
 
