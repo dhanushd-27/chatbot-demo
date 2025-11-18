@@ -109,10 +109,10 @@ export const transcribeAudioFromBlobUrl = async (blobUrl: string, sessionId?: st
   // Resolve backend URL with sensible fallbacks
   let resolvedBackendUrl = backendUrl;
   if (!resolvedBackendUrl) {
-    // Environment overrides (Vite)
-    resolvedBackendUrl = import.meta.env?.VITE_BACKEND_URL;
+    // Environment overrides (Vite) - use VITE_API_BASE_URL for consistency
+    resolvedBackendUrl = import.meta.env?.VITE_API_BASE_URL;
     // Final hardcoded local default
-    resolvedBackendUrl = resolvedBackendUrl || 'http://127.0.0.1:8000';
+    resolvedBackendUrl = resolvedBackendUrl || 'http://localhost:8000';
   }
 
   if (!resolvedBackendUrl) {

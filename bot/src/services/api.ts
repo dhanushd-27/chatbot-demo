@@ -13,7 +13,8 @@ export interface ApiError {
 }
 
 // Base API configuration
-const API_BASE_URL = 'http://localhost:8000';
+// Use VITE_API_BASE_URL from environment variables, fallback to localhost:8000
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // Generic API request function
 export const apiRequest = async <T = any>(
